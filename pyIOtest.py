@@ -35,18 +35,22 @@ def runIoCommand(runs, command, resultPath):
 
 #"main"
 # create the test result directory with a timestamp
-if not os.path.exists("test_results"):
-    os.mkdir("test_results")
-resultDir = "test_results/"+ str(datetime.now())
+testBaseDir = "/tmp/pyIOResults"
+if not os.path.exists(testBaseDir):
+    os.mkdir(testBaseDir)
+resultDir = testBaseDir+ str(datetime.now())
 os.mkdir(resultDir)
 compileBenchRuns = 1
 iozoneRuns = 1
+IOdirectory = "/tmp/pyIOworkDir"
+if not os.path.exists(IOdirectory):
+    os.mkdir(IOdirectory)
 # compilebench in makej mode
-runIoCommand(compileBenchRuns, 'cd compilebench-0.6 && ./compilebench -D compilebench_working_dir_<run> -i 1 --makej ',  resultDir + "/compilebench_makej_")
+runIoCommand(compileBenchRuns, 'cd compilebench-0.6 && ./compilebench -D' + IOdirectory + 'compilebench_working_dir_<run> -i 1 --makej ',  resultDir + "/compilebench_makej_")
 # without makej
-runIoCommand(compileBenchRuns, 'cd compilebench-0.6 && ./compilebench -D compilebench_working_dir_<run> -i 1 -r 1 ',  resultDir + "/compilebench_")
+runIoCommand(compileBenchRuns, 'cd compilebench-0.6 && ./compilebench -D' + IOdirectory + 'compilebench_working_dir_<run> -i 1 -r 1 ',  resultDir + "/compilebench_")
 # iozone with all tests
-runIoCommand(iozoneRuns, 'iozone -a',  resultDir + "/iozone_a")
+runIoCommand(iozoneRuns, 'iozone -a -b ' + resultDir + ,  resultDir + "/iozone_a")
 # set fio parameters
 fiomode = "randrw"
 fionumj = "4"
@@ -56,3 +60,5 @@ fioExtraArgs =  " --direct=0 --group_reporting --fallocate=none"
 # run fio
 runIoCommand(2, 'fio --rw=' + fiomode + " --name test<run> --bs=" + fioBlockSize + " --numj=" + fionumj + " --size=" + fioSize + fioExtraArgs,
   resultDir + "/fio_" + fiomode + "_s" + fioSize + "_numj" + fionumj + "_")
+ 
+#subprocess.Popen("rm -rf test*", stderr=subprocess.PIPE,stdout=subprocess.PIPE, shell=True)
