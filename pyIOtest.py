@@ -3,18 +3,19 @@ import os
 import subprocess
 from datetime import datetime
 import shutil
+import argparse
 
 def initializePath(path):
-    if not os.path.exists(path):
-        os.mkdir(path)
+    os.makedirs(path, exist_ok=True)
 
 def cleanUp(path):
+    print("Cleaning " + path)
     shutil.rmtree(path)
 
 # get all the outputs in a string and decode it to a string
 def decodeOutput(output):
     return (output.stderr.read() + output.stdout.read()).decode("utf-8")
-    
+
 # runs the IO commands in subprocesses, catches all stderr and stdout output and
 # writes it into resultPath, automatically appending run to filename
 def runIoCommand(runs, command, resultPath):
@@ -31,11 +32,13 @@ def runIoCommand(runs, command, resultPath):
             f.close()
 
 def compileBenchTests(IOdirectory, resultDir):
+    IOdirectory += "/compilebench/"
+    initializePath(IOdirectory)
     compileBenchRuns = 1
     # compilebench in makej mode
-    runIoCommand(compileBenchRuns, 'cd compilebench-0.6 && ./compilebench -D' + IOdirectory + 'compilebench_working_dir_<run> -i 1 --makej ',  resultDir + "/compilebench_makej_")
+    runIoCommand(compileBenchRuns, 'cd compilebench-0.6 && ./compilebench -D' + IOdirectory + '<run> -i 1 --makej ',  resultDir + "/compilebench_makej_")
     # without makej
-    runIoCommand(compileBenchRuns, 'cd compilebench-0.6 && ./compilebench -D' + IOdirectory + 'compilebench_working_dir_<run> -i 1 -r 1 ',  resultDir + "/compilebench_")
+    runIoCommand(compileBenchRuns, 'cd compilebench-0.6 && ./compilebench -D' + IOdirectory + '<run> -i 1 -r 1 ',  resultDir + "/compilebench_")
     cleanUp(IOdirectory)
     initializePath(IOdirectory)
 
@@ -45,6 +48,8 @@ def ioZoneTests(resultDir):
     runIoCommand(iozoneRuns, 'iozone -a -b ' + resultDir + "/result<run>.xls",  resultDir + "/iozone_a")    
 
 def fioTests(IOdirectory, resultDir):
+    IOdirectory += "/fio/"
+    initializePath(IOdirectory)
     fioRuns = 1
     # set fio parameters
     fiomode = "randrw"
@@ -57,18 +62,30 @@ def fioTests(IOdirectory, resultDir):
       resultDir + "/fio_" + fiomode + "_s" + fioSize + "_numj" + fionumj + "_") 
     cleanUp(IOdirectory)
 
-def main():
+def main(args):
+    print(args)
+    # avoid likely mistakes
+    if args.workdir == "" or args.workdir == "/":
+        print("No empty string allowed for workdir")
+        return -1
+    if args.resultDir == "":
+        print("No empty string allowed for resultDir")
+        return -1
     # create the test result directory with a timestamp
-    testBaseDir = "/tmp/pyIOResults/"
-    initializePath(testBaseDir)
-    resultDir = testBaseDir+ str(datetime.now())
+    resultBaseDir = args.resultDir
+    initializePath(resultBaseDir)
+    resultDir = resultBaseDir+ str(datetime.now())
     initializePath(resultDir)
-    IOdirectory = "/tmp/pyIOworkDir/"
+    IOdirectory = args.workdir+"/pyIOdata"
     initializePath(IOdirectory)
 
     compileBenchTests(IOdirectory, resultDir)
     ioZoneTests(resultDir)
-    fioTests(IOdirectory, resultDir)    
+    fioTests(IOdirectory, resultDir)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Process some values.')
+    parser.add_argument("workdir", help='Location where IO is done')
+    parser.add_argument("resultDir", help='Location of results')
+    args = parser.parse_args()
+    main(args)
