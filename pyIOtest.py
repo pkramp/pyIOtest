@@ -17,6 +17,9 @@ class PyIOtest:
     compileBenchRuns = 1
     # iozone args
     iozoneRuns = 1
+    iozoneRecordSize = 4096
+    iozoneFileSize = 32768
+    iozoneThreads = 0
     
     
     def initializePath(self, path):
@@ -47,24 +50,24 @@ class PyIOtest:
                 f.write(self.decodeOutput(output))
                 f.close()
 
-    def compileBenchTests(self):
+    def compileBenchTests(self, extraArgs=""):
         cIOdirectory = self.IOdirectory + "/compilebench/"
         self.initializePath(cIOdirectory)
         # compilebench in makej mode
-        self.runIoCommand(self.compileBenchRuns, 'cd compilebench-0.6 && ./compilebench -D' + cIOdirectory + '<run> -i 1 --makej ',  self.resultDir + "/compilebench_makej_")
+        self.runIoCommand(self.compileBenchRuns, 'cd compilebench-0.6 && ./compilebench -D' + cIOdirectory + '<run> -i 1 --makej ' + extraArgs,  self.resultDir + "/compilebench_makej_")
         # without makej
-        self.runIoCommand(self.compileBenchRuns, 'cd compilebench-0.6 && ./compilebench -D' + cIOdirectory + '<run> -i 1 -r 1 ',  self.resultDir + "/compilebench_")
+        self.runIoCommand(self.compileBenchRuns, 'cd compilebench-0.6 && ./compilebench -D' + cIOdirectory + '<run> -i 1 -r 1 ' + extraArgs,  self.resultDir + "/compilebench_")
         self.cleanUp(cIOdirectory)
         self.initializePath(cIOdirectory)
 
-    def ioZoneTests(self):
+    def ioZoneTests(self, extraArgs=""):
         IOzoneDirectory = self.IOdirectory + "/ioZone/"
         self.initializePath(IOzoneDirectory)
         # iozone with all tests
-        self.runIoCommand(self.iozoneRuns, 'cd ' + IOzoneDirectory + ' iozone -a -b ' + self.resultDir + "/result<run>.xls",  "")
+        self.runIoCommand(self.iozoneRuns, 'cd ' + IOzoneDirectory + '&& iozone -r' + str(self.iozoneRecordSize) + ' -s ' + str(self.iozoneFileSize) + ' ' + extraArgs + " -b" + self.resultDir + "/result<run>.xls",  "")
         self.cleanUp(IOzoneDirectory)
 
-    def fioTests(self):
+    def fioTests(self, extraArgs=""):
         fIOdirectory = self.IOdirectory + "/fio/"
         self.initializePath(fIOdirectory)
         # run fio

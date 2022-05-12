@@ -21,8 +21,16 @@ def default(args):
     pyIO.initializePath(pyIO.IOdirectory)
 
     pyIO.compileBenchTests()
-    ioZoneTests()
+    pyIO.iozoneRecordSize = 4096
+    pyIO.iozoneFileSize = 32768
+    pyIO.ioZoneTests()
+    pyIO.iozoneRecordSize = 4
+    pyIO.iozoneFileSize = 32768
+    pyIO.iozoneThreads = 10
+    pyIO.ioZoneTests()
     pyIO.fioTests()
+    pyIO.fioSize = "200M"
+    pyIO.fioSize = "2G"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process some values.')
