@@ -14,13 +14,9 @@ def timeout_handler(signum, frame):   # Custom signal handler
 
 
 # runs the actual test case
-def runTest(pyIO, scheduler, tries, args):
-    print("Running")
-    signal.alarm(3595)
-    try:
-        start = timeit.default_timer()
+def testCase1(pyIO, scheduler, tries, args):
         pyIO.initializeRunDirectory(args)
-        pyIO.compileBenchTests()
+        #pyIO.compileBenchTests()
         pyIO.iozoneRecordSize = 4096
         pyIO.iozoneFileSize = 32768
         pyIO.ioZoneTests()
@@ -29,28 +25,31 @@ def runTest(pyIO, scheduler, tries, args):
         pyIO.iozoneThreads = 10
         pyIO.ioZoneTests()
         pyIO.fioSize = "200M"
-        pyIO.fioTests()
+        #pyIO.fioTests()
+
+
+def timedExecution(testToRun, pyIO, scheduler, tries, args):
+    print("Running")
+    signal.alarm(3595)
+    try:
+        start = timeit.default_timer()
+        testToRun(pyIO, scheduler, tries, args)
         stop = timeit.default_timer()
         # reduce waitTime by duration of run tasks
-        waitTime = 2.0 - (stop-start)
-        if waitTime < 0.0:
-            waitTime = 0.0
-        tries += 1
-        if tries < 10:
-            scheduler.enter(waitTime, 1, runTest, (pyIO,scheduler, tries, args))
     except TimeoutException:
         print("Timed out current attempt, restarting")
         stop = timeit.default_timer()
-        waitTime = 2.0 - (stop-start)
-        if waitTime < 0.0:
-            waitTime = 0.0
-        tries += 1
-        if tries < 10:
-            scheduler.enter(waitTime, 1, runTest, (pyIO,scheduler, tries, args))    
     else:
         # Reset the alarm
         signal.alarm(0)
-        
+    
+    waitTime = 2.0 - (stop-start)
+    if waitTime < 0.0:
+        waitTime = 0.0
+    tries += 1
+    if tries < 10:
+        scheduler.enter(waitTime, 1, timedExecution, (testToRun, pyIO,scheduler, tries, args))
+
 def default(args):
     signal.signal(signal.SIGALRM, timeout_handler)
     scheduler = sched.scheduler(time.time, time.sleep)
@@ -65,7 +64,7 @@ def default(args):
         print("No empty string allowed for resultDir")
         return -1
     # create the test result directory with a timestamp
-    scheduler.enter(0, 1, runTest, (pyIO,scheduler, tries, args))
+    scheduler.enter(0, 1, timedExecution, (testCase1, pyIO,scheduler, tries, args))
     scheduler.run()
 
 if __name__ == "__main__":
