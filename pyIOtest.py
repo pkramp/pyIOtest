@@ -25,8 +25,13 @@ class PyIOtest:
     def initializeRunDirectory(self, args):
         self.resultBaseDir = args.resultDir
         self.initializePath(self.resultBaseDir)
-        self.resultDir = self.resultBaseDir + "/" + str(datetime.now())
+        self.resultDir = self.resultBaseDir + "/" + str(datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p"))
         self.initializePath(self.resultDir)
+        self.initializePath(self.resultDir + "/fio/")
+        self.initializePath(self.resultDir + "/iozone/xls/")
+        self.initializePath(self.resultDir + "/iozone/txt/")
+        self.initializePath(self.resultDir + "/compilebench/")
+        self.initializePath(self.resultDir + "/compilebench_makej/")
         self.IOdirectory = args.workdir+"/pyIOdata"
         self.initializePath(self.IOdirectory)
     
@@ -62,9 +67,9 @@ class PyIOtest:
         cIOdirectory = self.IOdirectory + "/compilebench/"
         self.initializePath(cIOdirectory)
         # compilebench in makej mode
-        self.runIoCommand(self.compileBenchRuns, 'cd compilebench-0.6 && ./compilebench -D' + cIOdirectory + '<run> -i 1 --makej ' + extraArgs,  self.resultDir + "/compilebench_makej_")
+        self.runIoCommand(self.compileBenchRuns, 'cd compilebench-0.6 && ./compilebench -D' + cIOdirectory + '<run> -i 1 --makej ' + extraArgs,  self.resultDir + "/compilebench_makej/")
         # without makej
-        self.runIoCommand(self.compileBenchRuns, 'cd compilebench-0.6 && ./compilebench -D' + cIOdirectory + '<run> -i 1 -r 1 ' + extraArgs,  self.resultDir + "/compilebench_")
+        self.runIoCommand(self.compileBenchRuns, 'cd compilebench-0.6 && ./compilebench -D' + cIOdirectory + '<run> -i 1 -r 1 ' + extraArgs,  self.resultDir + "/compilebench/")
         self.cleanUp(cIOdirectory)
         self.initializePath(cIOdirectory)
 
@@ -72,7 +77,7 @@ class PyIOtest:
         IOzoneDirectory = self.IOdirectory + "/ioZone/"
         self.initializePath(IOzoneDirectory)
         # iozone with all tests
-        self.runIoCommand(self.iozoneRuns, 'cd ' + IOzoneDirectory + '&& iozone -r' + str(self.iozoneRecordSize) + ' -s ' + str(self.iozoneFileSize) + ' ' + extraArgs + " -b" + self.resultDir + "/result<run>.xls",  self.resultDir + "/iozone_")
+        self.runIoCommand(self.iozoneRuns, 'cd ' + IOzoneDirectory + '&& iozone -r' + str(self.iozoneRecordSize) + ' -s ' + str(self.iozoneFileSize) + ' ' + extraArgs + " -b " + self.resultDir + "/iozone/xls/<run>.xls",  self.resultDir + "/iozone/txt/")
         self.cleanUp(IOzoneDirectory)
 
     def fioTests(self, extraArgs=""):
@@ -82,6 +87,6 @@ class PyIOtest:
         self.runIoCommand(self.fioRuns, 'fio --rw=' + self.fiomode + " --name " 
         + fIOdirectory + "/test<run> --bs=" + self.fioBlockSize + " --numj=" 
         + self.fionumj + " --size=" + self.fioSize + self.fioExtraArgs,
-          self.resultDir + "/fio_" + self.fiomode + "_s" + self.fioSize 
+          self.resultDir + "/fio/" + self.fiomode + "_s" + self.fioSize 
           + "_numj" + self.fionumj + "_")
         self.cleanUp(fIOdirectory)

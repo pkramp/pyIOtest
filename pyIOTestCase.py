@@ -1,5 +1,6 @@
 #!/usr/bin/python
 from pyIOtest import PyIOtest
+from pyIOplot import PyIOPlot
 from datetime import datetime
 import timeit
 import sched, time
@@ -12,11 +13,11 @@ class TimeoutException(Exception):   # Custom exception class
 def timeout_handler(signum, frame):   # Custom signal handler
     raise TimeoutException
 
-
 # runs the actual test case
 def testCase1(pyIO, scheduler, tries, args):
+        # create the work directory test and result directory with a timestamp
         pyIO.initializeRunDirectory(args)
-        #pyIO.compileBenchTests()
+        pyIO.compileBenchTests()
         pyIO.iozoneRecordSize = 4096
         pyIO.iozoneFileSize = 32768
         pyIO.ioZoneTests()
@@ -24,8 +25,8 @@ def testCase1(pyIO, scheduler, tries, args):
         pyIO.iozoneFileSize = 32768
         pyIO.iozoneThreads = 10
         pyIO.ioZoneTests()
-        pyIO.fioSize = "200M"
-        #pyIO.fioTests()
+        pyIO.fioSize = "20M"
+        pyIO.fioTests()
 
 
 def timedExecution(testToRun, pyIO, scheduler, tries, args):
@@ -47,7 +48,7 @@ def timedExecution(testToRun, pyIO, scheduler, tries, args):
     if waitTime < 0.0:
         waitTime = 0.0
     tries += 1
-    if tries < 10:
+    if tries < 2:
         scheduler.enter(waitTime, 1, timedExecution, (testToRun, pyIO,scheduler, tries, args))
 
 def default(args):
@@ -63,9 +64,12 @@ def default(args):
     if args.resultDir == "":
         print("No empty string allowed for resultDir")
         return -1
-    # create the test result directory with a timestamp
     scheduler.enter(0, 1, timedExecution, (testCase1, pyIO,scheduler, tries, args))
     scheduler.run()
+    pyIOplot = PyIOPlot()
+
+    pyIOplot.getFioResults(args.resultDir)
+    #pyIOplot.getIoZoneResults(args.resultDir)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process pyIO arguments.')
