@@ -2,6 +2,7 @@
 import os
 import subprocess
 import shutil
+from datetime import datetime
 class PyIOtest:
     # members
     IOdirectory = "/tmp/pyIOworkdir"
@@ -21,6 +22,13 @@ class PyIOtest:
     iozoneFileSize = 32768
     iozoneThreads = 0
     
+    def initializeRunDirectory(self, args):
+        self.resultBaseDir = args.resultDir
+        self.initializePath(self.resultBaseDir)
+        self.resultDir = self.resultBaseDir + "/" + str(datetime.now())
+        self.initializePath(self.resultDir)
+        self.IOdirectory = args.workdir+"/pyIOdata"
+        self.initializePath(self.IOdirectory)
     
     def initializePath(self, path):
         os.makedirs(path, exist_ok=True)
@@ -64,7 +72,7 @@ class PyIOtest:
         IOzoneDirectory = self.IOdirectory + "/ioZone/"
         self.initializePath(IOzoneDirectory)
         # iozone with all tests
-        self.runIoCommand(self.iozoneRuns, 'cd ' + IOzoneDirectory + '&& iozone -r' + str(self.iozoneRecordSize) + ' -s ' + str(self.iozoneFileSize) + ' ' + extraArgs + " -b" + self.resultDir + "/result<run>.xls",  "")
+        self.runIoCommand(self.iozoneRuns, 'cd ' + IOzoneDirectory + '&& iozone -r' + str(self.iozoneRecordSize) + ' -s ' + str(self.iozoneFileSize) + ' ' + extraArgs + " -b" + self.resultDir + "/result<run>.xls",  self.resultDir + "/iozone_")
         self.cleanUp(IOzoneDirectory)
 
     def fioTests(self, extraArgs=""):
