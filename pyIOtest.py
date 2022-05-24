@@ -60,6 +60,7 @@ class PyIOtest:
                 path = resultPath + str(x) + ".txt"
                 f = open(path, "w")
                 print("Writing output to " + path)
+                f.write("TIME:" + str(datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p")) + "\n")
                 f.write(self.decodeOutput(output))
                 f.close()
 
@@ -84,8 +85,8 @@ class PyIOtest:
         fIOdirectory = self.IOdirectory + "/fio/"
         self.initializePath(fIOdirectory)
         # run fio
-        self.runIoCommand(self.fioRuns, 'fio --rw=' + self.fiomode + " --name " 
-        + fIOdirectory + "/test<run> --bs=" + self.fioBlockSize + " --numj=" 
+        self.runIoCommand(self.fioRuns, 'fio --rw=' + self.fiomode + " --name "
+        + fIOdirectory + "/test<run> --bs=" + self.fioBlockSize + " --numj="
         + self.fionumj + " --size=" + self.fioSize + self.fioExtraArgs,
           self.resultDir + "/fio/" + self.fiomode + "_s" + self.fioSize 
           + "_numj" + self.fionumj + "_")

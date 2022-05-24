@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from pyIOtest import PyIOtest
 from pyIOplot import PyIOPlot
-from datetime import datetime
+from datetime import datetime, timedelta
 import timeit
 import sched, time
 import argparse
@@ -17,21 +17,21 @@ def timeout_handler(signum, frame):   # Custom signal handler
 def testCase1(pyIO, scheduler, tries, args):
         # create the work directory test and result directory with a timestamp
         pyIO.initializeRunDirectory(args)
-        pyIO.compileBenchTests()
+        #pyIO.compileBenchTests()
         pyIO.iozoneRecordSize = 4096
         pyIO.iozoneFileSize = 32768
-        pyIO.ioZoneTests()
+        #pyIO.ioZoneTests()
         pyIO.iozoneRecordSize = 4
         pyIO.iozoneFileSize = 32768
         pyIO.iozoneThreads = 10
-        pyIO.ioZoneTests()
+        #pyIO.ioZoneTests()
         pyIO.fioSize = "20M"
         pyIO.fioTests()
 
 
 def timedExecution(testToRun, pyIO, scheduler, tries, args):
     print("Running")
-    signal.alarm(3595)
+    signal.alarm(int(args.waitTime))
     try:
         start = timeit.default_timer()
         testToRun(pyIO, scheduler, tries, args)
@@ -44,16 +44,19 @@ def timedExecution(testToRun, pyIO, scheduler, tries, args):
         # Reset the alarm
         signal.alarm(0)
     
-    waitTime = 2.0 - (stop-start)
+    waitTime = float(args.waitTime) - (stop-start)
     if waitTime < 0.0:
         waitTime = 0.0
     tries += 1
-    if tries < 2:
+    if tries < int(args.tests):
         scheduler.enter(waitTime, 1, timedExecution, (testToRun, pyIO,scheduler, tries, args))
 
 def default(args):
     signal.signal(signal.SIGALRM, timeout_handler)
     scheduler = sched.scheduler(time.time, time.sleep)
+    pyIOplot = PyIOPlot()
+    # tiny timedelta to not skip first test
+    pyIOplot.startTime = datetime.now() - timedelta(seconds=1)
     pyIO = PyIOtest()
     tries = 0
     print(args)
@@ -64,9 +67,14 @@ def default(args):
     if args.resultDir == "":
         print("No empty string allowed for resultDir")
         return -1
+    if args.waitTime == "":
+        print("No empty string allowed for waitTime")
+        return -1
+    if args.tests == "":
+        print("No empty string allowed for number of tests")
+        return -1
     scheduler.enter(0, 1, timedExecution, (testCase1, pyIO,scheduler, tries, args))
     scheduler.run()
-    pyIOplot = PyIOPlot()
 
     pyIOplot.getFioResults(args.resultDir)
     #pyIOplot.getIoZoneResults(args.resultDir)
@@ -75,5 +83,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process pyIO arguments.')
     parser.add_argument("workdir", help='Location where IO is done')
     parser.add_argument("resultDir", help='Location of results')
+    parser.add_argument("waitTime", help='Time during test starts')
+    parser.add_argument("tests", help='Amount of tests')
     args = parser.parse_args()
     default(args)
