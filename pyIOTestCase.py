@@ -57,6 +57,7 @@ def default(args):
     pyIOplot = PyIOPlot()
     # tiny timedelta to not skip first test
     pyIOplot.startTime = datetime.now() - timedelta(seconds=1)
+    print(pyIOplot.startTime)
     pyIO = PyIOtest()
     tries = 0
     print(args)
@@ -76,7 +77,7 @@ def default(args):
     scheduler.enter(0, 1, timedExecution, (testCase1, pyIO,scheduler, tries, args))
     scheduler.run()
 
-    pyIOplot.getFioResults(args.resultDir)
+    #pyIOplot.getFioResults(args.resultDir)
     #pyIOplot.getIoZoneResults(args.resultDir)
 
 if __name__ == "__main__":

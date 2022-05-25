@@ -2,6 +2,7 @@ import os
 import subprocess
 from datetime import datetime, timedelta
 import shutil
+import argparse
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,6 +21,8 @@ class fioResult:
 class PyIOPlot:
     test_results = []
     startTime = 0
+    workDir = ""
+    
     # point this method to a result directory. 
     # It will iterate over all sub directories
     # and gather all data in a format to be plotted
@@ -97,8 +100,6 @@ class PyIOPlot:
             if(self.startTime <= testTime):
                 # get timedelta and save it
                 timeD =  (testTime - self.startTime).total_seconds()
-                print(timeD)
-                #print(x)
                 fR = fioResult()
                 fR.readResult = fResult[0]
                 fR.writeResult = fResult[1]
@@ -110,6 +111,25 @@ class PyIOPlot:
         readResults.sort()
         writeResults.sort()
         fig, ax = plt.subplots()
-        ax.plot(times, readResults)
-        ax.plot(times, writeResults)
+        readHandle, = ax.plot(times, readResults, label='Read performance')
+        writeHandle, = ax.plot(times, writeResults, label='Write performance')
+        ax.set_xlabel("Time since start in seconds")
+        ax.set_ylabel("Throughput in MiB/s")
+        ax.legend(handles=[readHandle, writeHandle])
+        ax.set_title("Fio Results on " + self.workDir)
         plt.show()
+
+    def plot(self, args):
+        pyIOplot.startTime = datetime.strptime(args.timeStamp, "%Y_%m_%d-%I_%M_%S_%p")
+        pyIOplot.workDir = args.workdir
+        pyIOplot.getFioResults(args.resultDir)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Process pyIO arguments.')
+    parser.add_argument("workdir", help='Location where IO is done')
+    parser.add_argument("resultDir", help='Location of results')
+    parser.add_argument("timeStamp", help='Timestamp, from which one results will be considered for plotting')
+    args = parser.parse_args()
+    pyIOplot = PyIOPlot()
+    pyIOplot.plot(args)
