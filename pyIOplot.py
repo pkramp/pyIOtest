@@ -58,7 +58,6 @@ class PyIOPlot:
         pos2 = inString.find(key2, pos1)
         return inString[pos1:pos2]
             
-        
     def removeUnitAndMultiply(self, str):
         multiplier = 1.0
         unit = str[-1]
@@ -108,8 +107,13 @@ class PyIOPlot:
                 times.append(timeD)
                 fioResults.append(fR)
 
-        readResults.sort()
-        writeResults.sort()
+        # get the order in which the results should be plotted
+        order = np.argsort(times)
+        # order times, readResults and writeResults
+        times = np.array(times)[order]
+        readResults = np.array(readResults)[order]
+        writeResults = np.array(writeResults)[order]
+        # now do the plotting
         fig, ax = plt.subplots()
         readHandle, = ax.plot(times, readResults, label='Read performance')
         writeHandle, = ax.plot(times, writeResults, label='Write performance')
@@ -122,7 +126,7 @@ class PyIOPlot:
     def plot(self, args):
         pyIOplot.startTime = datetime.strptime(args.timeStamp, "%d_%m_%Y-%H_%M_%S")
         pyIOplot.workDir = args.workdir
-        pyIOplot.getFioResults(args.resultDir)
+        pyIOplot.getFioResults(args.resultDir + "/fio")
 
 
 if __name__ == "__main__":
