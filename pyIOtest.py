@@ -70,9 +70,9 @@ class PyIOtest:
         cIOdirectory = self.IOdirectory + "/compilebench/"
         self.initializePath(cIOdirectory)
         # compilebench in makej mode
-        self.runIoCommand(self.compileBenchRuns, 'cd compilebench-0.6 && ./compilebench -D' + cIOdirectory + '<run> -i 1 --makej ' + extraArgs,  self.resultDir + "/compilebench_makej/")
+        self.runIoCommand(self.compileBenchRuns, 'cd compilebench-0.6 && ./compilebench -D' + cIOdirectory + '<run> -i 10 --makej ' + extraArgs,  self.resultDir + "/compilebench_makej/")
         # without makej
-        self.runIoCommand(self.compileBenchRuns, 'cd compilebench-0.6 && ./compilebench -D' + cIOdirectory + '<run> -i 1 -r 1 ' + extraArgs,  self.resultDir + "/compilebench/")
+        self.runIoCommand(self.compileBenchRuns, 'cd compilebench-0.6 && ./compilebench -D' + cIOdirectory + '<run> -i 10 -r 20 ' + extraArgs,  self.resultDir + "/compilebench/")
         self.cleanUp(cIOdirectory)
         self.initializePath(cIOdirectory)
 
