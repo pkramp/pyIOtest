@@ -1,6 +1,5 @@
 #!/usr/bin/python
 from pyIOtest import PyIOtest
-from pyIOplot import PyIOPlot
 from datetime import datetime, timedelta
 import timeit
 import sched, time
@@ -17,14 +16,14 @@ def timeout_handler(signum, frame):   # Custom signal handler
 def testCase1(pyIO, scheduler, tries, args):
         # create the work directory test and result directory with a timestamp
         pyIO.initializeRunDirectory(args)
-        #pyIO.compileBenchTests()
+        pyIO.compileBenchTests()
         pyIO.iozoneRecordSize = 4096
         pyIO.iozoneFileSize = 32768
-        #pyIO.ioZoneTests()
+        pyIO.ioZoneTests()
         pyIO.iozoneRecordSize = 4
         pyIO.iozoneFileSize = 32768
         pyIO.iozoneThreads = 10
-        #pyIO.ioZoneTests()
+        pyIO.ioZoneTests()
         pyIO.fioSize = "20M"
         pyIO.fioTests()
 
@@ -54,10 +53,6 @@ def timedExecution(testToRun, pyIO, scheduler, tries, args):
 def default(args):
     signal.signal(signal.SIGALRM, timeout_handler)
     scheduler = sched.scheduler(time.time, time.sleep)
-    pyIOplot = PyIOPlot()
-    # tiny timedelta to not skip first test
-    pyIOplot.startTime = datetime.now() - timedelta(seconds=1)
-    print(pyIOplot.startTime)
     pyIO = PyIOtest()
     tries = 0
     print(args)
@@ -76,9 +71,6 @@ def default(args):
         return -1
     scheduler.enter(0, 1, timedExecution, (testCase1, pyIO,scheduler, tries, args))
     scheduler.run()
-
-    #pyIOplot.getFioResults(args.resultDir)
-    #pyIOplot.getIoZoneResults(args.resultDir)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process pyIO arguments.')

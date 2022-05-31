@@ -96,7 +96,7 @@ class PyIOPlot:
         for x in results:
             fResult = self.parseFioResult(x)
             # only plot from start time
-            testTime = datetime.strptime(fResult[2], "%Y_%m_%d-%I_%M_%S_%p")
+            testTime = datetime.strptime(fResult[2], "%d_%m_%Y-%H_%M_%S")
             if(self.startTime <= testTime):
                 # get timedelta and save it
                 timeD =  (testTime - self.startTime).total_seconds()
@@ -120,7 +120,7 @@ class PyIOPlot:
         plt.show()
 
     def plot(self, args):
-        pyIOplot.startTime = datetime.strptime(args.timeStamp, "%Y_%m_%d-%I_%M_%S_%p")
+        pyIOplot.startTime = datetime.strptime(args.timeStamp, "%d_%m_%Y-%H_%M_%S")
         pyIOplot.workDir = args.workdir
         pyIOplot.getFioResults(args.resultDir)
 

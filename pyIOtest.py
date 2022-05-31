@@ -25,14 +25,16 @@ class PyIOtest:
     def initializeRunDirectory(self, args):
         self.resultBaseDir = args.resultDir
         self.initializePath(self.resultBaseDir)
-        self.resultDir = self.resultBaseDir + "/" + str(datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p"))
+        self.startTime = datetime.now()
+        self.stringTime = str(self.startTime.strftime("%d_%m_%Y-%H_%M_%S"))
+        self.resultDir = self.resultBaseDir + "/"
         self.initializePath(self.resultDir)
         self.initializePath(self.resultDir + "/fio/")
         self.initializePath(self.resultDir + "/iozone/xls/")
         self.initializePath(self.resultDir + "/iozone/txt/")
-        self.initializePath(self.resultDir + "/compilebench/")
+        self.initializePath(self.resultDir + "/compilebench/" )
         self.initializePath(self.resultDir + "/compilebench_makej/")
-        self.IOdirectory = args.workdir+"/pyIOdata"
+        self.IOdirectory = args.workdir + "/pyIOdata/" + self.stringTime
         self.initializePath(self.IOdirectory)
     
     def initializePath(self, path):
@@ -57,10 +59,10 @@ class PyIOtest:
                 # start subprocess and capture
                 output = subprocess.Popen(command2, stderr=subprocess.PIPE,stdout=subprocess.PIPE, shell=True)
                 # write output
-                path = resultPath + str(x) + ".txt"
+                path = resultPath + self.stringTime + "___" + str(x) + ".txt"
                 f = open(path, "w")
                 print("Writing output to " + path)
-                f.write("TIME:" + str(datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p")) + "\n")
+                f.write("TIME:" + str(datetime.now().strftime("%d_%m_%Y-%H_%M_%S")) + "\n")
                 f.write(self.decodeOutput(output))
                 f.close()
 
@@ -78,7 +80,7 @@ class PyIOtest:
         IOzoneDirectory = self.IOdirectory + "/ioZone/"
         self.initializePath(IOzoneDirectory)
         # iozone with all tests
-        self.runIoCommand(self.iozoneRuns, 'cd ' + IOzoneDirectory + '&& iozone -r' + str(self.iozoneRecordSize) + ' -s ' + str(self.iozoneFileSize) + ' ' + extraArgs + " -b " + self.resultDir + "/iozone/xls/<run>.xls",  self.resultDir + "/iozone/txt/")
+        self.runIoCommand(self.iozoneRuns, 'cd ' + IOzoneDirectory + '&& iozone -r' + str(self.iozoneRecordSize) + ' -s ' + str(self.iozoneFileSize) + ' ' + extraArgs + " -b " + self.resultDir + "/iozone/xls/" + self.stringTime + "___<run>.xls",  self.resultDir + "/iozone/txt/")
         self.cleanUp(IOzoneDirectory)
 
     def fioTests(self, extraArgs=""):
