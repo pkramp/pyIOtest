@@ -60,33 +60,82 @@ class PyIOPlot:
                 
     # parsing method for compileBench raw text
     def parseCompileBench(self, inString):
-        searchStrings = {"intial create total runs", ")\ncreate total runs", 
+        searchStrings = ["intial create total runs", ")\ncreate total runs", 
         "patch total runs", "compile total runs ", "clean total runs", 
-        "read tree total runs", "read compiled tree total runs " }
+        "read tree total runs", "read compiled tree total runs " ]
         results = []
         for searchString in searchStrings:
             subs = self.substrSearch(inString, searchString, "MB/s")
             subs = self.substrSearch(subs, "avg ", "\n")
             results.append(subs)
+        # also get timestamp
+        timestamp = self.substrSearch(inString, "TIME:", "\n")
+        results.append(timestamp)
         return results
 
     def parseFioResult(self, inString):
         results = []
         substr = self.substrSearch(inString, "READ: bw=", "iB/s")
-        results.append(self.removeUnitAndMultiply(substr))
+        results.append(self.removeUnitAndMultiply(substr, True))
         
         substr = self.substrSearch(inString, "WRITE: bw=", "iB/s")
-        results.append(self.removeUnitAndMultiply(substr))
+        results.append(self.removeUnitAndMultiply(substr, True))
         timestamp = self.substrSearch(inString, "TIME:", "\n")
         results.append(timestamp)
         return results
 
     def getCompileBenchResults(self, path):
+        initCreate = []
+        create = []
+        patch = []
+        compile = []
+        clean = []
+        readTree = []
+        readCompiled = []
+        times = []
         # gather all result texts from given path
         results = self.resultIteration(path)
         for result in results:
             cbResult = self.parseCompileBench(result)
-            print(cbResult)
+            testTime = datetime.strptime(cbResult[7], "%d_%m_%Y-%H_%M_%S")
+            if(self.startTime <= testTime):
+                print(cbResult)
+                initCreate.append(float(cbResult[0]))
+                create.append(float(cbResult[1]))
+                patch.append(float(cbResult[2]))
+                compile.append(float(cbResult[3]))
+                clean.append(float(cbResult[4]))
+                readTree.append(float(cbResult[5]))
+                readCompiled.append(float(cbResult[6]))
+                timeD =  (testTime - self.startTime).total_seconds()
+                times.append(timeD)
+
+        # get the order in which the results should be plotted
+        order = np.argsort(times)
+        # order times, readResults and writeResults
+        times = np.array(times)[order]
+        initCreate = np.array(initCreate)[order]
+        create = np.array(create)[order]
+        patch = np.array(patch)[order]
+        compile = np.array(compile)[order]
+        clean = np.array(clean)[order]
+        readTree = np.array(readTree)[order]
+        readCompiled = np.array(readCompiled)[order]
+        # now do the plotting
+        fig, ax = plt.subplots()
+        initCreateHandle, = ax.plot(times, initCreate, label='Initial create performance')
+        createHandle, = ax.plot(times, create, label='Create performance')
+        patchHandle, = ax.plot(times, patch, label='Patch performance')
+        compileHandle, = ax.plot(times, compile, label='Compile performance')
+        #cleanHandle, = ax.plot(times, clean, label='Clean performance')
+        readTreeHandle, = ax.plot(times, readTree, label='readTree performance')
+        #readCompiledHandle, = ax.plot(times, readCompiled, label='readCompiled performance')
+        
+        ax.set_xlabel("Time since start in seconds")
+        ax.set_ylabel("Throughput in MB/s")
+        ax.legend(handles=[initCreateHandle, createHandle, patchHandle, compileHandle, readTreeHandle])
+        ax.set_title("Compilebench results on " + self.workDir)
+        plt.show()
         
         
 
@@ -120,6 +169,7 @@ class PyIOPlot:
         times = np.array(times)[order]
         readResults = np.array(readResults)[order]
         writeResults = np.array(writeResults)[order]
+        print(readResults)
         # now do the plotting
         fig, ax = plt.subplots()
         readHandle, = ax.plot(times, readResults, label='Read performance')
@@ -133,7 +183,7 @@ class PyIOPlot:
     def plot(self, args):
         pyIOplot.startTime = datetime.strptime(args.timeStamp, "%d_%m_%Y-%H_%M_%S")
         pyIOplot.workDir = args.workdir
-        #pyIOplot.getFioResults(args.resultDir + "/fio")
+        #pyIOplot.getFioResults(args.resultDir + "/fio/")
         pyIOplot.getCompileBenchResults(args.resultDir + "/compilebench/")
 
 
