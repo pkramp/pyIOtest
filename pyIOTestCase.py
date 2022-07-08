@@ -1,31 +1,43 @@
 #!/usr/bin/python
 from pyIOtest import PyIOtest
+from fioModule import FioModule
+from ioZoneModule import IoZoneModule
+from compileBenchModule import CompileBenchModule
 from datetime import datetime, timedelta
 import timeit
-import sched, time
+import sched
+import time
 import argparse
 import signal
 
+
 class TimeoutException(Exception):   # Custom exception class
     pass
+
 
 def timeout_handler(signum, frame):   # Custom signal handler
     raise TimeoutException
 
 # runs the actual test case
+
+
 def testCase1(pyIO, scheduler, tries, args):
-        # create the work directory test and result directory with a timestamp
-        pyIO.initializeRunDirectory(args)
-        pyIO.compileBenchTests()
-        pyIO.iozoneRecordSize = 4096
-        pyIO.iozoneFileSize = 32768
-        pyIO.ioZoneTests()
-        pyIO.iozoneRecordSize = 4
-        pyIO.iozoneFileSize = 32768
-        pyIO.iozoneThreads = 10
-        pyIO.ioZoneTests()
-        pyIO.fioSize = "20M"
-        pyIO.fioTests()
+    # create the work directory test and result directory with a timestamp
+    pyIO.initializeRunDirectory(args)
+    cbm = CompileBenchModule(pyIO)
+    # cbm.compileBenchTests(pyIO)
+
+    ioz = IoZoneModule(pyIO)
+    ioz.iozoneRecordSize = 4096
+    ioz.iozoneFileSize = 32768
+    ioz.ioZoneTests(pyIO)
+    ioz.iozoneRecordSize = 4
+    ioz.iozoneFileSize = 32768
+    ioz.iozoneThreads = 10
+    ioz.ioZoneTests(pyIO)
+    f = FioModule(pyIO)
+    f.fioSize = "20M"
+    f.fioTests(pyIO)
 
 
 def timedExecution(testToRun, pyIO, scheduler, tries, args):
@@ -42,13 +54,15 @@ def timedExecution(testToRun, pyIO, scheduler, tries, args):
     else:
         # Reset the alarm
         signal.alarm(0)
-    
+
     waitTime = float(args.waitTime) - (stop-start)
     if waitTime < 0.0:
         waitTime = 0.0
     tries += 1
     if tries < int(args.tests):
-        scheduler.enter(waitTime, 1, timedExecution, (testToRun, pyIO,scheduler, tries, args))
+        scheduler.enter(waitTime, 1, timedExecution,
+                        (testToRun, pyIO, scheduler, tries, args))
+
 
 def default(args):
     signal.signal(signal.SIGALRM, timeout_handler)
@@ -69,8 +83,10 @@ def default(args):
     if args.tests == "":
         print("No empty string allowed for number of tests")
         return -1
-    scheduler.enter(0, 1, timedExecution, (testCase1, pyIO,scheduler, tries, args))
+    scheduler.enter(0, 1, timedExecution,
+                    (testCase1, pyIO, scheduler, tries, args))
     scheduler.run()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process pyIO arguments.')
