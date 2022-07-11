@@ -3,11 +3,6 @@ from pyIOtest import PyIOtest
 
 
 class FioModule():
-    def __init__(self, pyIO):
-        self.resultDir = pyIO.resultDir + "/fio/"
-        self.IOdir = pyIO.IOdirectory + "/fio/"
-        pyIO.initializePath(self.resultDir)
-
     fioRuns = 1
     # fio args
     fiomode = "randrw"
@@ -15,6 +10,11 @@ class FioModule():
     fioSize = "20M"
     fioBlockSize = "1M"
     fioExtraArgs = " --direct=0 --group_reporting --fallocate=none"
+
+    def __init__(self, pyIO):
+        self.resultDir = pyIO.resultDir + "/fio/"
+        self.IOdir = pyIO.IOdirectory + "/fio/"
+        pyIO.initializePath(self.resultDir)
 
     def fioTests(self, pyIO, extraArgs=""):
         pyIO.initializePath(self.IOdir)
